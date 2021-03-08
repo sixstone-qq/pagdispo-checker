@@ -1,0 +1,8 @@
+[[websites]]
+
+url = "https://stackoverflow.com/"
+
+[[websites]]
+
+url = "https://duckduckgo.com"
+match_regex = "tracked"
