@@ -1,7 +1,13 @@
 """Main application entry point
 """
-from .config import load
+import asyncio
+
+from pagdispo.checker.config import load
+from pagdispo.checker.monitor import monitor
 
 def run():
     """Entry point for the website checker"""
-    print(load("websites.toml"))
+    websites = load("websites.toml")
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(monitor(websites))
