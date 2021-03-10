@@ -6,8 +6,14 @@ import aiohttp
 from pagdispo.checker.model import HTTPMethodEnum, Website, WebsiteResult
 
 
-async def monitor(websites: Sequence[Website]) -> None:
-    """Monitor all websites"""
+async def monitor_forever(websites: Sequence[Website], queue: asyncio.Queue) -> None:
+    while True:
+        await monitor(websites, queue)
+        await asyncio.sleep(1.0)
+
+
+async def monitor(websites: Sequence[Website], queue: asyncio.Queue) -> None:
+    """Monitor all websites and send them to a queue"""
     # Defines tracing for calc the elapsed time
     trace_cfg = aiohttp.TraceConfig()
     trace_cfg.on_request_start.append(on_request_start)
@@ -15,8 +21,10 @@ async def monitor(websites: Sequence[Website]) -> None:
     # We can modify the parallel limit with a custom TCPConnector
     async with aiohttp.ClientSession(trace_configs=[trace_cfg]) as session:
         futures = [fetch(session, w) for w in websites]
-        out = await asyncio.gather(*futures)
-        print(out)
+        for coro in asyncio.as_completed(futures):
+            # Send messages to queue as they come
+            website_out = await coro
+            await queue.put(website_out)
 
 
 async def fetch(session: aiohttp.ClientSession, website: Website) -> Tuple[Website, WebsiteResult]:
