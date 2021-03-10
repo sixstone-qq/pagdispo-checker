@@ -5,11 +5,12 @@ import aiokafka
 from pydantic import BaseModel
 
 from pagdispo.checker.model import Website, WebsiteResult
+from pagdispo.checker.settings import settings
 
 
 async def produce(queue: asyncio.Queue) -> None:
     producer = aiokafka.AIOKafkaProducer(
-        bootstrap_servers='localhost:9092')
+        bootstrap_servers=settings.KAFKA_BROKERS)
 
     await producer.start()
 

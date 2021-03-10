@@ -4,12 +4,13 @@ from typing import Sequence, Tuple
 import aiohttp
 
 from pagdispo.checker.model import HTTPMethodEnum, Website, WebsiteResult
+from pagdispo.checker.settings import settings
 
 
 async def monitor_forever(websites: Sequence[Website], queue: asyncio.Queue) -> None:
     while True:
         await monitor(websites, queue)
-        await asyncio.sleep(1.0)
+        await asyncio.sleep(settings.TICK_TIME)
 
 
 async def monitor(websites: Sequence[Website], queue: asyncio.Queue) -> None:
