@@ -21,7 +21,7 @@ async def produce(queue: asyncio.Queue) -> None:
 
             if len(website_output) == 2:
                 kafka_record = KafkaRecord(website=website_output[0], result=website_output[1])
-                await producer.send_and_wait('website.monitor',
+                await producer.send_and_wait(settings.KAFKA_TOPIC,
                                              key=website_output[0].id.encode(),
                                              value=kafka_record.json().encode())
 
