@@ -3,6 +3,7 @@
 import asyncio
 
 from pagdispo.recorder.consumer import consume
+from pagdispo.recorder.store import store
 
 
 async def main():
@@ -13,7 +14,10 @@ async def main():
     """
     queue = asyncio.Queue()
 
-    await consume(queue)
+    consume_task = asyncio.create_task(consume(queue))
+    store_task = asyncio.create_task(store(queue))
+
+    await asyncio.gather(consume_task, store_task)
 
 
 def run():

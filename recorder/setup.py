@@ -11,6 +11,7 @@ setup(
     entry_points={
         'console_scripts': [
             'pagdispo-recorder = pagdispo.recorder.app:run',
+            'migrate-db = pagdispo.recorder.migration:run',
         ]
     }
 )

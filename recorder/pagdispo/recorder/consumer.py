@@ -1,5 +1,6 @@
 """Kafka consumer to receive messages from topic
 """
+import asyncio
 import json
 import io
 
@@ -9,7 +10,8 @@ from pagdispo.recorder.model import Website, WebsiteResult
 from pagdispo.recorder.settings import settings
 
 
-async def consume():
+async def consume(queue: asyncio.Queue):
+    """Consume website results from Kafka topic to send them to a queue"""
     consumer = aiokafka.AIOKafkaConsumer(
         settings.KAFKA_TOPIC,
         bootstrap_servers=settings.KAFKA_BROKERS,
@@ -32,8 +34,8 @@ async def consume():
                                                status=msg.value['result']['status'],
                                                matched=msg.value['result'].get('matched'),
                                                at=msg.timestamp)
-                print(website)
-                print(website_result)
+
+                await queue.put((website, website_result))
             except KeyError as ex:
                 print('Wrong value: {} => {}'.format(msg.value, ex))
 

@@ -14,6 +14,8 @@ multidict==5.1.0
 mypy==0.812
 mypy-extensions==0.4.3
 packaging==20.9
+# Editable Git install with no remote (pagdispo-website-checker==0.0.1)
+-e /home/quique/dev/aiven/pagdispo/checker
 pluggy==0.13.1
 py==1.10.0
 pycares==3.1.1
