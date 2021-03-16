@@ -28,3 +28,7 @@ def run():
     websites = load("websites.toml")
 
     asyncio.run(main(websites))
+
+
+if __name__ == '__main__':
+    run()
