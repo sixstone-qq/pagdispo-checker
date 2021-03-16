@@ -6,7 +6,7 @@ Python system to monitor websites periodically in a scalable way.
 It comprises of two Python applications: `pagdispo-checker` and
 `pagdispo-recorder`.
 
-## pagdispo-checker
+### pagdispo-checker
 
 `pagdispo-checker` is a Python app that reads from a [TOML](https://toml.io/en/) file the websites to monitor
 optionally matching a regular expression. It follows this format:
@@ -29,7 +29,7 @@ configurable via `TICK_TIME` environment variable and send to a Kafka
 topic configurable via `KAFKA_TOPIC` through broker configurable via
 `KAFKA_BROKERS` the result of the monitor check.
 
-## pagdispo-recorder
+### pagdispo-recorder
 
 `pagdispo-recorder` is a Python app that reads from a Kafka topic
 configurable via `KAFKA_TOPIC` environment variable through a Kafka
@@ -37,4 +37,18 @@ broker via `KAFKA_BROKERS` the results of monitor checks of websites
 and stores them in a PostgreSQL database whose DSN is configurable via
 `POSTGRESQL_DSN` environment variable.
 
+## Development
+
+It provides a Docker compose with a Kafka + PostgreSQL ready to be
+use. `Virtualenv` is used to set up the development locally.
+
+```shell
+make start-dev
+```
+
+Then, run `cd checker && ./venv/bin/pagdispo-checker` for local
+testing in one terminal and `cd recorder &&
+./venv/bin/pagdipso-recorder` in other terminal.
+
+In order to stop the docker compose, run `make stop-dev`.
 
