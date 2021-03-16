@@ -23,3 +23,7 @@ async def main():
 def run():
     """Entry point for the website monitor recorder"""
     asyncio.run(main())
+
+
+if __name__ == '__main__':
+    run()
