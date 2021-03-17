@@ -6,6 +6,7 @@ import toml
 
 from pagdispo.checker.model import Website
 
+
 def load(path: str) -> Sequence[Website]:
     """
     Load a configuration file to get the list of servers to check
@@ -14,7 +15,7 @@ def load(path: str) -> Sequence[Website]:
     url = http://foo.bar
     method = GET
     match_regex = 'OK$'
-    
+
 
     :param str path: the relative path of the file in TOML format
     :returns: the list of servers to check
@@ -39,6 +40,3 @@ def load(path: str) -> Sequence[Website]:
         websites.append(Website(**kwargs))
 
     return tuple(websites)
-
-    
-    

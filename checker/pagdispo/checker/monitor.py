@@ -51,4 +51,5 @@ async def on_request_start(session, trace_config_ctx, params):
 
 
 async def on_request_end(session, trace_config_ctx, params):
-    trace_config_ctx.trace_request_ctx['elapsed'] = asyncio.get_event_loop().time() - trace_config_ctx.start
+    trace_config_ctx.trace_request_ctx['elapsed'] = asyncio.get_event_loop().time() - \
+        trace_config_ctx.start
