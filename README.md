@@ -52,3 +52,25 @@ testing in one terminal and `cd recorder &&
 
 In order to stop the docker compose, run `make stop-dev`.
 
+## Testing
+
+You can run all testsuite using the created virtualenv:
+
+```shell
+make start-dev
+make test
+```
+
+## Linting
+
+[flake8](https://flake8.pycqa.org/en/latest/) is used for style guide
+enforcement or linting and
+[MyPy](https://mypy.readthedocs.io/en/stable/index.html) for
+informative static type checking on python 3 annotations.
+
+You can run
+```
+make lint
+```
+
+To see their results.
