@@ -16,7 +16,7 @@ async def consume(queue: asyncio.Queue):
         settings.KAFKA_TOPIC,
         bootstrap_servers=settings.KAFKA_BROKERS,
         group_id='website-monitor-recorder',
-        auto_offset_reset='earliest',
+        # auto_offset_reset='earliest',
         key_deserializer=bytes.decode,
         value_deserializer=value_deserialiser
     )
