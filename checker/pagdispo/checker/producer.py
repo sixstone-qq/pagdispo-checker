@@ -16,22 +16,31 @@ async def produce(queue: asyncio.Queue) -> None:
 
     try:
         while True:
-            # It comprises of a tuple (Website, WebsiteResult)
-            website_output = await queue.get()
-
-            if len(website_output) == 2:
-                kafka_record = KafkaRecord(website=website_output[0], result=website_output[1])
-                await producer.send_and_wait(settings.KAFKA_TOPIC,
-                                             key=website_output[0].id.encode(),
-                                             value=kafka_record.json().encode())
-
-                print('Sent {}'.format(website_output[0].id))
-            else:
-                print('Invalid data')
-
-            queue.task_done()
+            get_and_send(queue, producer, settings.KAFKA_TOPIC)
     finally:
         await producer.stop()
+
+
+async def get_and_send(queue: asyncio.Queue,
+                       producer: aiokafka.AIOKafkaProducer,
+                       topic: str) -> bool:
+    # It comprises of a tuple (Website, WebsiteResult)
+    website_output = await queue.get()
+
+    sent = False
+    if len(website_output) == 2:
+        kafka_record = KafkaRecord(website=website_output[0], result=website_output[1])
+        await producer.send_and_wait(topic,
+                                     key=website_output[0].id.encode(),
+                                     value=kafka_record.json().encode())
+
+        print('Sent {}'.format(website_output[0].id))
+        sent = True
+    else:
+        print('Invalid data')
+
+    queue.task_done()
+    return sent
 
 
 class KafkaRecord(BaseModel):
