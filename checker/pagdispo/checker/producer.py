@@ -2,6 +2,7 @@
 import asyncio
 
 import aiokafka
+from aiokafka.helpers import create_ssl_context
 from pydantic import BaseModel
 
 from pagdispo.checker.model import Website, WebsiteResult
@@ -9,14 +10,29 @@ from pagdispo.checker.settings import settings
 
 
 async def produce(queue: asyncio.Queue) -> None:
+    ssl_context = None
+    security_protocol = 'PLAINTEXT'
+    if settings.KAFKA_SSL_CAFILE is not None:
+        ssl_context = create_ssl_context(
+            cafile=settings.KAFKA_SSL_CAFILE,
+            certfile=settings.KAFKA_SSL_CERTFILE,
+            keyfile=settings.KAFKA_SSL_KEYFILE,
+        )
+        security_protocol = 'SSL'
+
     producer = aiokafka.AIOKafkaProducer(
-        bootstrap_servers=settings.KAFKA_BROKERS)
+        bootstrap_servers=settings.KAFKA_BROKERS,
+        ssl_context=ssl_context,
+        security_protocol=security_protocol,
+    )
+
+    print(ssl_context)
 
     await producer.start()
 
     try:
         while True:
-            get_and_send(queue, producer, settings.KAFKA_TOPIC)
+            await get_and_send(queue, producer, settings.KAFKA_TOPIC)
     finally:
         await producer.stop()
 

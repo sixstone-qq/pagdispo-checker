@@ -8,6 +8,12 @@ class Settings(BaseSettings):
 
     KAFKA_BROKERS: str = 'localhost:9092'
 
+    KAFKA_SSL_CAFILE: str = None
+
+    KAFKA_SSL_CERTFILE: str = None
+
+    KAFKA_SSL_KEYFILE: str = None
+
     KAFKA_TOPIC: str = 'website.monitor'
 
     class Config:

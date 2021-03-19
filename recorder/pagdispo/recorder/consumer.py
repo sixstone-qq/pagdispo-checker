@@ -5,6 +5,7 @@ import json
 import io
 
 import aiokafka
+from aiokafka.helpers import create_ssl_context
 
 from pagdispo.recorder.model import Website, WebsiteResult
 from pagdispo.recorder.settings import settings
@@ -12,13 +13,25 @@ from pagdispo.recorder.settings import settings
 
 async def consume(queue: asyncio.Queue):
     """Consume website results from Kafka topic to send them to a queue"""
+    ssl_context = None
+    security_protocol = 'PLAINTEXT'
+    if settings.KAFKA_SSL_CAFILE is not None:
+        ssl_context = create_ssl_context(
+            cafile=settings.KAFKA_SSL_CAFILE,
+            certfile=settings.KAFKA_SSL_CERTFILE,
+            keyfile=settings.KAFKA_SSL_KEYFILE,
+        )
+        security_protocol = 'SSL'
+
     consumer = aiokafka.AIOKafkaConsumer(
         settings.KAFKA_TOPIC,
         bootstrap_servers=settings.KAFKA_BROKERS,
         group_id='website-monitor-recorder',
         # auto_offset_reset='earliest',
         key_deserializer=bytes.decode,
-        value_deserializer=value_deserialiser
+        value_deserializer=value_deserialiser,
+        ssl_context=ssl_context,
+        security_protocol=security_protocol,
     )
     await consumer.start()
 

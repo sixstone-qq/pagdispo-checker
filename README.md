@@ -74,3 +74,17 @@ make lint
 ```
 
 To see their results.
+
+## Settings
+
+The configuration settings can be modified using environment variables
+or via dotenv files.
+
+For example:
+
+```
+KAFKA_BROKERS=1.1.1.1:9092 python -m pagdispo.checker
+```
+
+Available settings for
+[pagdispo-checker](checker/pagdispo/checker/settings.py) and [pagdispo-recorder](recorder/pagdispo/recorder/settings.py).

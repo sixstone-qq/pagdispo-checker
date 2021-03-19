@@ -8,11 +8,7 @@ from pagdispo.recorder.settings import settings
 
 
 async def store(queue: asyncio.Queue) -> None:
-    pool = await aiopg.create_pool(
-        dbname=settings.POSTGRESQL_DSN.path[1:],
-        user=settings.POSTGRESQL_DSN.user,
-        host=settings.POSTGRESQL_DSN.host,
-    )
+    pool = await aiopg.create_pool(dsn=str(settings.POSTGRESQL_DSN))
 
     try:
         while True:

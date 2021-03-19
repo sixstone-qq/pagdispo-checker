@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     """Settings contains the settings for checker to run"""
     KAFKA_BROKERS: str = 'localhost:9092'
 
+    KAFKA_SSL_CAFILE: str = None
+
+    KAFKA_SSL_CERTFILE: str = None
+
+    KAFKA_SSL_KEYFILE: str = None
+
     KAFKA_TOPIC: str = 'website.monitor'
 
     POSTGRESQL_DSN: PostgresDsn = 'postgres://postgres@localhost/monitor_check'
