@@ -28,8 +28,8 @@ clean:
 	$(MAKE) stop-dev
 
 test:
-	$(MAKE) -C checker test
 	$(MAKE) -C recorder test
+	$(MAKE) -C checker test
 
 lint:
 	$(MAKE) -C checker lint
