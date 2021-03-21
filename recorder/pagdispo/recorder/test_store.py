@@ -1,9 +1,13 @@
+import os
+import socket
+import time
 from datetime import datetime
 
 import aiopg
 import psycopg2
 import pytest
 import yoyo
+from docker import APIClient
 
 from pagdispo.recorder.settings import proj_root, Settings
 from pagdispo.recorder.model import Website, WebsiteResult
@@ -16,18 +20,106 @@ def settings():
 
 
 @pytest.fixture(scope='session')
-def db_conn(settings):
+def unused_port():
+    def f():
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(('127.0.0.1', 0))
+            return s.getsockname()[1]
+
+    return f
+
+
+@pytest.fixture(scope='session')
+def docker():
+    return APIClient(version='auto')
+
+
+@pytest.fixture(scope='session')
+def pg_server(unused_port, docker):
+    if 'CI' not in os.environ:
+        yield
+        return
+
+    docker.pull('postgres:12')
+
+    container_args = dict(
+        image='postgres:12',
+        name='aiopg-test-server',
+        ports=[5432],
+        detach=True,
+    )
+
+    # bound IPs do not work on OSX
+    host = "127.0.0.1"
+    host_port = unused_port()
+    container_args['host_config'] = docker.create_host_config(
+        port_bindings={5432: (host, host_port)}
+    )
+    container_args['environment'] = {'POSTGRES_HOST_AUTH_METHOD': 'trust'}
+
+    container = docker.create_container(**container_args)
+
+    try:
+        docker.start(container=container['Id'])
+        server_params = dict(database='postgres',
+                             user='postgres',
+                             password='mysecretpassword',
+                             host=host,
+                             port=host_port)
+        delay = 0.001
+        for i in range(100):
+            try:
+                conn = psycopg2.connect(**server_params)
+                cur = conn.cursor()
+                cur.execute("CREATE EXTENSION hstore;")
+                cur.close()
+                conn.close()
+                break
+            except psycopg2.Error:
+                time.sleep(delay)
+                delay *= 2
+        else:
+            pytest.fail("Cannot start postgres server")
+
+        container['host'] = host
+        container['port'] = host_port
+        container['pg_params'] = server_params
+
+        yield container
+    finally:
+        docker.kill(container=container['Id'])
+        docker.remove_container(container['Id'])
+
+
+@pytest.fixture(scope='session')
+def pg_params(settings, pg_server):
+    if 'CI' in os.environ:
+        return dict(**pg_server['pg_params'])
+
+    return dict(dsn=settings.POSTGRESQL_DSN)
+
+
+@pytest.fixture(scope='session')
+def db_creation(pg_params, settings):
     """Set the DB connection and create a DB"""
-    db_name = settings.POSTGRESQL_DSN.path[1:]
-    conn = psycopg2.connect(dbname='postgres',
-                            user=settings.POSTGRESQL_DSN.user,
-                            host=settings.POSTGRESQL_DSN.host)
-    conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
-    with conn.cursor() as cur:
-        cur.execute("CREATE DATABASE " + db_name)
+    path = settings.POSTGRESQL_DSN.path
+    db_name = path[1:]
+    if 'CI' not in os.environ:
+        conn = psycopg2.connect(str(settings.POSTGRESQL_DSN.replace(path, '/postgres')))
+        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        with conn.cursor() as cur:
+            cur.execute("CREATE DATABASE " + db_name)
 
     # Run migrations
-    backend = yoyo.get_backend(settings.POSTGRESQL_DSN)
+    dsn = settings.POSTGRESQL_DSN
+    if 'CI' in os.environ:
+        dsn = 'postgres://{}:{}@{}:{}/{}'.format(pg_params['user'],
+                                                 pg_params['password'],
+                                                 pg_params['host'],
+                                                 pg_params['port'],
+                                                 pg_params['database'])
+
+    backend = yoyo.get_backend(dsn)
     migrations = yoyo.read_migrations(str(settings.PROJ_ROOT / 'db' / 'migrations'))
 
     with backend.lock():
@@ -36,19 +128,18 @@ def db_conn(settings):
 
     backend._connection.close()
 
-    yield conn
+    yield
 
-    with conn.cursor() as cur:
-        cur.execute('DROP DATABASE IF EXISTS  ' + db_name)
+    if 'CI' not in os.environ:
+        with conn.cursor() as cur:
+            cur.execute('DROP DATABASE IF EXISTS  ' + db_name)
 
-    conn.close()
+        conn.close()
 
 
 @pytest.fixture(scope='function')
-async def db_pool(db_conn, settings):
-    async with aiopg.create_pool(dbname=settings.POSTGRESQL_DSN.path[1:],
-                                 user=settings.POSTGRESQL_DSN.user,
-                                 host=settings.POSTGRESQL_DSN.host) as pool:
+async def db_pool(db_creation, settings, pg_params):
+    async with aiopg.create_pool(**pg_params) as pool:
         yield pool
 
 

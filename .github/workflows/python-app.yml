@@ -44,21 +44,20 @@ jobs:
           --health-retries 30
           --health-start-period 60s
 
-      postgres:
-        # Docker Hub image
-        image: postgres
-        # Provide the password for postgres
-        env:
-          POSTGRES_HOST_AUTH_METHOD: trust
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
+      # postgres:
+      #   # Docker Hub image
+      #   image: postgres:12
+      #   ports:
+      #     - 5432:5432
+      #   # Provide the password for postgres
+      #   env:
+      #     POSTGRES_HOST_AUTH_METHOD: trust
+      #   # Set health checks to wait until postgres has started
+      #   options: >-
+      #     --health-cmd pg_isready
+      #     --health-interval 10s
+      #     --health-timeout 5s
+      #     --health-retries 5
 
     steps:
     - uses: actions/checkout@v2
@@ -76,3 +75,6 @@ jobs:
     - name: Test
       run: |
         make test
+      env:
+        POSTGRESQL_DSN: postgres://postgres@localhost:5432/postgres
+        CI: true

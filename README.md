@@ -61,6 +61,14 @@ make start-dev
 make test
 ```
 
+### CI
+
+We are using [Github Actions](.github/workflows/python-app.yml) for
+running the test.
+
+> By now, PG tests creates the Docker container instead of running the
+> service container as it seems not to work with aiopg library.
+
 ## Linting
 
 [flake8](https://flake8.pycqa.org/en/latest/) is used for style guide
@@ -83,7 +91,7 @@ or via dotenv files.
 For example:
 
 ```
-KAFKA_BROKERS=1.1.1.1:9092 python -m pagdispo.checker
+KAFKA_BROKERS=1.1.1.1:9092 KAFKA_SSL_CERTFILE=service.cert KAFKA_SSL_KEYFILE=service.key KAFKA_SSL_CAFILE=ca.pem POSTGRESQL_DSN=postgres://admin:pass@host:20127/defaultdb?sslmode=require python -m pagdispo.recorder
 ```
 
 Available settings for

@@ -9,7 +9,7 @@ start-dev:
 	venv/bin/python setup.py develop
 
 test:
-	@venv/bin/pytest
+	@venv/bin/pytest -vv --cov=pagdispo
 
 lint:
 	venv/bin/flake8 $(MODULES)
